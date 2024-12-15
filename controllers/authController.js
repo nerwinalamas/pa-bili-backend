@@ -18,6 +18,12 @@ const register = async (req, res) => {
             lastName,
             email,
             password: hashedPassword,
+            shippingAddress: {
+                street: "",
+                city: "",
+                postalCode: "",
+                country: "",
+            },
         });
         await user.save();
 
@@ -98,7 +104,7 @@ const verifyAdmin = async (req, res) => {
                 .json({ message: "Access denied: Admins only" });
         }
 
-        res.status(200).json({ message: "Token valid", isAdmin: true }); 
+        res.status(200).json({ message: "Token valid", isAdmin: true });
     } catch (error) {
         res.status(401).json({ message: "Invalid token" });
     }
@@ -164,7 +170,9 @@ const changePassword = async (req, res) => {
 
         const isMatch = await bcrypt.compare(currentPassword, user.password);
         if (!isMatch) {
-            return res.status(400).json({ message: "Current password is incorrect" });
+            return res
+                .status(400)
+                .json({ message: "Current password is incorrect" });
         }
 
         const hashedNewPassword = await bcrypt.hash(newPassword, 10);
@@ -178,6 +186,48 @@ const changePassword = async (req, res) => {
     }
 };
 
+const getShippingPreferences = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const user = await User.findById(userId).select("shippingAddress");
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        res.status(200).json({ shippingAddress: user.shippingAddress });
+    } catch (error) {
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+const updateShippingPreferences = async (req, res) => {
+    const { street, city, postalCode, country } = req.body;
+
+    if (!street || !city || !postalCode || !country) {
+        return res.status(400).json({ message: "All fields are required" });
+    }
+
+    console.log("update:", req.body)
+
+    try {
+        const userId = req.user._id;
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        user.shippingAddress = { street, city, postalCode, country };
+        await user.save();
+
+        res.status(200).json({
+            message: "Shipping preferences updated successfully",
+        });
+    } catch (error) {
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
 
 module.exports = {
     register,
@@ -187,5 +237,7 @@ module.exports = {
     verifyAdmin,
     profile,
     updateProfile,
-    changePassword
+    changePassword,
+    getShippingPreferences,
+    updateShippingPreferences,
 };
