@@ -118,6 +118,10 @@ const profile = async (req, res) => {
             firstName: user.firstName,
             lastName: user.lastName,
             email: user.email,
+            street: user.shippingAddress.street,
+            city: user.shippingAddress.city,
+            postalCode: user.shippingAddress.postalCode,
+            country: user.shippingAddress.country,
         });
     } catch (error) {
         res.status(500).json({ message: "Internal Server Error", error });
@@ -225,6 +229,7 @@ const updateShippingPreferences = async (req, res) => {
             message: "Shipping preferences updated successfully",
         });
     } catch (error) {
+        console.log("update shipping preferences error:", error)
         res.status(500).json({ message: "Internal server error" });
     }
 };
