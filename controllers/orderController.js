@@ -100,7 +100,10 @@ const getOrderById = async (req, res) => {
     const { id } = req.params;
 
     try {
-        const order = await Order.findById(id);
+        const order = await Order.findById(id).populate({
+            path: "orderItems.product",
+            select: "name ",
+        });
 
         if (!order) {
             return res.status(404).json({
@@ -114,35 +117,71 @@ const getOrderById = async (req, res) => {
     }
 };
 
-// const updateOrderToPaid = async (req, res) => {
-//     try {
-//         const order = await Order.findById(req.params.id);
+const getAllOrders = async (req, res) => {
+    try {
+        const orders = await Order.find();
 
-//         if (!order) {
-//             return res.status(404).json({
-//                 message: 'Order not found'
-//             });
-//         }
+        if (orders.length === 0) {
+            return res.status(404).json({
+                message: "No orders found",
+            });
+        }
 
-//         order.isPaid = true;
-//         order.paidAt = Date.now();
-//         order.orderStatus = 'Processing';
+        res.status(200).json(orders);
+    } catch (error) {
+        res.status(500).json({ message: "Internal Server Error", error });
+    }
+};
 
-//         const updatedOrder = await order.save();
+const updateOrderStatus = async (req, res) => {
+    const { id } = req.params;
+    const { orderStatus, isPaid, paidAt, isDelivered, deliveredAt } = req.body;
 
-//         res.status(200).json(updatedOrder);
-//     } catch (error) {
-//         console.error('Error updating order payment:', error);
-//         res.status(500).json({
-//             message: 'Error updating order payment',
-//             error: error.message
-//         });
-//     }
-// };
+    try {
+        const order = await Order.findById(id);
+
+        if (!order) {
+            return res.status(404).json({
+                message: "Order not found",
+            });
+        }
+
+        // Update order status if provided
+        if (orderStatus) {
+            order.orderStatus = orderStatus;
+        }
+
+        // Update payment status
+        if (isPaid !== undefined) {
+            order.isPaid = isPaid;
+            order.paidAt = isPaid ? paidAt || new Date() : null;
+        }
+
+        // Update delivery status
+        if (isDelivered !== undefined) {
+            order.isDelivered = isDelivered;
+            order.deliveredAt = isDelivered ? deliveredAt || new Date() : null;
+        }
+
+        // Save the updated order
+        const updatedOrder = await order.save();
+
+        res.status(200).json({
+            message: "Order updated successfully",
+            order: updatedOrder,
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: "Internal Server Error",
+            error: error.message,
+        });
+    }
+};
 
 module.exports = {
     createOrder,
     getUserOrders,
     getOrderById,
-    // updateOrderToPaid
+    getAllOrders,
+    updateOrderStatus,
 };
