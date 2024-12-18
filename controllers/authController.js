@@ -212,8 +212,6 @@ const updateShippingPreferences = async (req, res) => {
         return res.status(400).json({ message: "All fields are required" });
     }
 
-    console.log("update:", req.body)
-
     try {
         const userId = req.user._id;
         const user = await User.findById(userId);
@@ -229,7 +227,6 @@ const updateShippingPreferences = async (req, res) => {
             message: "Shipping preferences updated successfully",
         });
     } catch (error) {
-        console.log("update shipping preferences error:", error)
         res.status(500).json({ message: "Internal server error" });
     }
 };
