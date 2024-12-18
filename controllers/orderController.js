@@ -35,7 +35,6 @@ const createOrder = async (req, res) => {
         let calculatedTotalPrice = 0;
         const processedOrderItems = await Promise.all(
             orderItems.map(async (item) => {
-                console.log("item:", item);
                 // Find the product
                 const product = await Product.findById(item.productId._id);
 
