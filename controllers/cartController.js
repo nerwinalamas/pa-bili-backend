@@ -34,6 +34,14 @@ const addItemToCart = async (req, res) => {
 const updateItemQuantity = async (req, res) => {
     const { userId, productId, quantity } = req.body;
 
+    if (!userId || !productId || quantity === undefined) {
+        return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    if (quantity < 0) {
+        return res.status(400).json({ message: "Quantity cannot be negative" });
+    }
+
     try {
         const cart = await Cart.findOne({ userId });
 
@@ -181,5 +189,5 @@ module.exports = {
     getUserCart,
     removeFromCart,
     checkout,
-    getCartItemCount
+    getCartItemCount,
 };
